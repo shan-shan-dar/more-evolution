@@ -1,65 +1,61 @@
 # simulation.py
 import random
 import time
-import matplotlib.pyplot as plt
+
+import pygame
+import sys
+
 from grid import Grid
 from population import Population
+import parameters as param
+import graphics as gfx
 
+# Pygame setup
+pygame.init()
+clock = pygame.time.Clock()
 
-def visualize(grid, population):
-    fig, ax = plt.subplots()
-
-    # Draw the grid lines
-    for i in range(grid.size_x() + 1):
-        ax.axvline(x=i, color="black", linestyle="-", linewidth=0.1)
-    for i in range(grid.size_y() + 1):
-        ax.axhline(y=i, color="black", linestyle="-", linewidth=0.1)
-
-    # Draw dots based on grid content
-    for x in range(grid.size_x()):
-        for y in range(grid.size_y()):
-            value = grid.at((x, y))
-
-            if value == grid.EMPTY:
-                # Empty place
-                continue
-            elif value < len(population.dots) and population.dots[value].alive:
-                # Dot at this location
-                center_x = x + 0.5
-                center_y = y + 0.5
-                circle = plt.Circle(
-                    (center_x, center_y),
-                    0.4,
-                    color=population.dots[value].color,
-                    fill=True,
-                )
-                ax.add_patch(circle)
-
-    ax.set_aspect("equal", adjustable="box")
-    ax.set_xlim(0, grid.size_x())  # Set x-axis limits
-    ax.set_ylim(0, grid.size_y())  # Set y-axis limits
-    plt.axis("off")  # Turn off axis labels
-
-    plt.show()
-
+# Pygame screen setup
+screen = pygame.display.set_mode((gfx.SCREEN_WIDTH, gfx.SCREEN_HEIGHT))
+pygame.display.set_caption("Simulation")
 
 if __name__ == "__main__":
+    # initializing stuff
     grid = Grid()
-    grid.init(100, 100)
+    grid.init(param.GridX, param.GridY)
 
     population = Population(grid)
-    population.fill(100)
+    population.fill(param.Gen0Population)
 
-    for dot in population.dots:
-        if dot.alive:
-            # Choose a random empty location for the dot
-            while True:
-                random_loc = (
-                    random.randint(0, grid.size_x() - 1),
-                    random.randint(0, grid.size_y() - 1),
-                )
-                if grid.is_empty_at(random_loc):
-                    break
-            population.move(dot.index, random_loc)
+    generationCount = 0
 
-    visualize(grid, population)
+    grid.initGen0(population)
+
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+
+        for generation in range(param.MaxGenerations):
+            for simStep in range(param.StepsPerGeneration):
+                for dot in population.dots:
+                    # Logic for each dot
+                    new_loc = (
+                        dot.loc[0] + random.randint(-1, 1),
+                        dot.loc[1] + random.randint(-1, 1),
+                    )
+                    if grid.is_in_bounds(new_loc) and grid.is_empty_at(new_loc):
+                        population.move(dot.index, new_loc)
+
+                # Logic for each simStep
+
+                # Visualization
+                screen.fill(gfx.BLACK)
+                gfx.draw_dots(screen, population)
+
+                pygame.display.flip()
+                clock.tick(10)
+
+            # Logic for each generation
+            generationCount += 1
+        break

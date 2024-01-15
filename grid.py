@@ -1,3 +1,6 @@
+import random
+
+
 class Grid:
     EMPTY = -1
 
@@ -10,6 +13,19 @@ class Grid:
             for i in range(len(column)):
                 column[i] = self.EMPTY
 
+    def initGen0(self, population):
+        for dot in population.dots:
+            if dot.alive:
+                # Choose a random empty location for the dot
+                while True:
+                    random_loc = (
+                        random.randint(0, self.size_x() - 1),
+                        random.randint(0, self.size_y() - 1),
+                    )
+                    if self.is_empty_at(random_loc):
+                        break
+                population.move(dot.index, random_loc)
+
     def size_x(self):
         return len(self.data)
 
@@ -20,8 +36,7 @@ class Grid:
         return 0 <= loc[0] < self.size_x() and 0 <= loc[1] < self.size_y()
 
     def is_empty_at(self, loc):
-        f = self.at(loc) == self.EMPTY
-        return f
+        return self.at(loc) == self.EMPTY
 
     def is_border(self, loc):
         return (
@@ -32,8 +47,7 @@ class Grid:
         )
 
     def at(self, loc):
-        l = self.data[loc[0]][loc[1]]
-        return l
+        return self.data[loc[0]][loc[1]]
 
     def set(self, loc, val):
         self.data[loc[0]][loc[1]] = val
